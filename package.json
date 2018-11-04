@@ -1,0 +1,23 @@
+{
+  "name": "ec2-image-augmentation-pipeline",
+  "version": "1.0.0",
+  "description": "Launch image augmentation pipelines on EC2 with a single command",
+  "main": "auto-ec2.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Marhill-Labs/ec2-image-augmentation-pipeline.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Marhill-Labs/ec2-image-augmentation-pipeline/issues"
+  },
+  "homepage": "https://github.com/Marhill-Labs/ec2-image-augmentation-pipeline#readme",
+  "dependencies": {
+    "aws-sdk": "^2.348.0",
+    "node-ssh": "^5.1.2"
+  }
+}

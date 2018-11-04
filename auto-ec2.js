@@ -78,10 +78,17 @@ ssh.connect({
   privateKey: '/home/daniel/Desktop/keys_credentials/key_acs.pem'
 })
   .then(() => {
-    return ssh.putFile('/home/daniel/Desktop/file.txt', '/home/ubuntu/meow.txt');
+    console.log('Running...');
+    return ssh.execCommand(
+    `git clone https://github.com/Marhill-Labs/ec2-image-augmentation-pipeline.git &&
+    cd ec2-image-augmentation-pipeline &&
+    pip3 install boto3 Augmentor Pillow numpy &&
+    python3 augmentor.py`);
   })
-  .then(() => {
-    console.log("The File thing is done");
+  .then(result => {
+    console.log('STDOUT: ' + result.stdout);
+    console.log('STDERR: ' + result.stderr);
+    console.log("Done");
     ssh.dispose();
   })
   .catch(error => {

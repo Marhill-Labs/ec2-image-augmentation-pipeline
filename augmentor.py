@@ -42,18 +42,19 @@ else:
 # create import/export folders if remote
 try:
     os.mkdir(import_folder)
-    print("Import Directory " , import_folder ,  " Created ")
+    print("Import Directory " , import_folder ,  " Created")
 except FileExistsError:
     print("Import Directory " , import_folder ,  " already exists")
 
 # delete export dir
-shutil.rmtree("export")
-
 try:
-    os.mkdir(export_folder)
-    print("Export Directory " , export_folder ,  " Created ")
+    shutil.rmtree("export")
+    print("Export Directory " , export_folder ,  " Removed")
 except FileExistsError:
-    print("Export Directory " , export_folder ,  " already exists")
+    print("Export Directory " , export_folder ,  " doesn't exist")
+
+os.mkdir(export_folder)
+print("Export Directory " , export_folder ,  " Created")
 
 my_bucket = s3.Bucket(IMPORT_BUCKET)
 

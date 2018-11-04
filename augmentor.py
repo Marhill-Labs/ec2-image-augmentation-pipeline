@@ -69,7 +69,6 @@ for object in my_bucket.objects.all():
     path, filename = os.path.split(object.key)
     if path == card_set:
         if os.path.exists(import_folder + "/" + filename) == False:
-            print("Downloading", filename)
             my_bucket.download_file(object.key, import_folder + "/" + filename)
 
 print("Done downloading Images")

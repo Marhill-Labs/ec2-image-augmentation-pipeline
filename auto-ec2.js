@@ -1,6 +1,4 @@
 //
-const fs = require('fs');
-const path = require('path');
 const node_ssh = require('node-ssh');
 const ssh = new node_ssh();
 
@@ -18,6 +16,8 @@ const instanceParams = {
 };
 
 // main();
+const public_dns = 'ec2-52-25-247-120.us-west-2.compute.amazonaws.com';
+shellCommands(public_dns);
 
 
 async function main() {
@@ -39,6 +39,7 @@ async function main() {
   const public_dns = described.Instances[0].PublicDnsName;
   console.log(public_dns);
 
+  shellCommands(public_dns);
 }
 
 
@@ -70,36 +71,49 @@ async function describeInstance(params) {
   });
 }
 
-// TODO replace with public_dns variable
+async function shellCommands(public_dns) {
 
-ssh.connect({
-  host: 'ec2-52-25-247-120.us-west-2.compute.amazonaws.com',
-  username: 'ubuntu',
-  privateKey: '/home/daniel/Desktop/keys_credentials/key_acs.pem'
-})
-  .then(() => {
+  try {
+
+    await ssh.connect({
+      host: public_dns,
+      username: 'ubuntu',
+      privateKey: '/home/daniel/Desktop/keys_credentials/key_acs.pem'
+    });
+
+    const result = await ssh.execCommand(`git clone https://github.com/Marhill-Labs/ec2-image-augmentation-pipeline.git`);
+
+    console.log(JSON.stringify(result));
+
+    await ssh.putFile('config.json', '/home/ubuntu/ec2-image-augmentation-pipeline/config.json');
+
+    console.log('Config copied.');
     console.log('Running...');
-    return ssh.execCommand(
-    `git clone https://github.com/Marhill-Labs/ec2-image-augmentation-pipeline.git &&
-    cd ec2-image-augmentation-pipeline &&
-    pip3 install boto3 Augmentor Pillow numpy &&
-    python3 augmentor.py`);
-  })
-  .then(result => {
-    console.log('STDOUT: ' + result.stdout);
-    console.log('STDERR: ' + result.stderr);
-    console.log("Done");
+
+    const output = await ssh.exec(`pip3 install boto3 Augmentor Pillow numpy &&
+      python3 augmentor.py`, ['1', '3ed', 'upload'], {
+      cwd: '/home/ubuntu/ec2-image-augmentation-pipeline',
+      onStdout(chunk) {
+        console.log('stdoutChunk', chunk.toString('utf8'))
+      },
+      onStderr(chunk) {
+        console.log('stderrChunk', chunk.toString('utf8'))
+      }
+    });
+
+    console.log(typeof output);
+
+    console.log(JSON.stringify(output));
+
+    console.log("Finished");
+
+  } catch(e) {
+    // not sure why there is an error being thrown
+    // convert to standard ssh library
+  } finally {
     ssh.dispose();
-  })
-  .catch(error => {
-    console.log("Something's wrong");
-    console.log(error);
-    ssh.dispose();
-  });
+  }
 
 
-// sudo apt install -y python3-pip
-// pip3 install numpy Pillow Augmentor
+}
 
-// installing nodejs only gets nodejs 8.1 (use nvm)
-//

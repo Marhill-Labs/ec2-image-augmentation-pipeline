@@ -2,6 +2,18 @@
 const node_ssh = require('node-ssh');
 const ssh = new node_ssh();
 
+if(!process.argv[2] || !process.argv[3]) {
+  console.log('Missing arguments for SAMPLES and/or CARD_SET');
+  console.log('Example: node auto-ec2.js 100 3ed');
+  process.exit();
+}
+
+const SAMPLES = process.argv[2];
+const CARD_SET = process.argv[3];
+
+console.log(`Initialized with ${SAMPLES} SAMPLEs, and ${CARD_SET} CARD_SET.`);
+
+
 const AWS = require('aws-sdk');
 AWS.config.loadFromPath('./config.json');
 const ec2 = new AWS.EC2({apiVersion: '2016-11-15', region: 'us-west-2'});
@@ -9,15 +21,13 @@ const ec2 = new AWS.EC2({apiVersion: '2016-11-15', region: 'us-west-2'});
 // AMIs are region-specific
 const instanceParams = {
   ImageId: 'ami-0bbe6b35405ecebdb',
-  InstanceType: 't1.micro',
+  InstanceType: 't3.xlarge',
   KeyName: 'key_acs',
   MinCount: 1,
   MaxCount: 1
 };
 
-// main();
-const public_dns = 'ec2-52-25-247-120.us-west-2.compute.amazonaws.com';
-shellCommands(public_dns);
+main();
 
 
 async function main() {
@@ -36,10 +46,13 @@ async function main() {
   console.log('Instance Ready');
 
   const described = await describeInstance(params);
-  const public_dns = described.Instances[0].PublicDnsName;
+  const public_dns = described.Reservations[0].Instances[0].PublicDnsName;
   console.log(public_dns);
 
-  shellCommands(public_dns);
+  await shellCommands(public_dns);
+  await terminateInstance(params);
+
+  console.log('All Done!');
 }
 
 
@@ -90,8 +103,9 @@ async function shellCommands(public_dns) {
     console.log('Config copied.');
     console.log('Running...');
 
-    const output = await ssh.exec(`pip3 install boto3 Augmentor Pillow numpy &&
-      python3 augmentor.py`, ['1', '3ed', 'upload'], {
+    const output = await ssh.exec(`sudo apt-get update && sudo apt-get install -y python3-pip && 
+      pip3 install boto3 Augmentor Pillow numpy &&
+      python3 augmentor.py`, [SAMPLES, CARD_SET, 'upload'], {
       cwd: '/home/ubuntu/ec2-image-augmentation-pipeline',
       onStdout(chunk) {
         console.log('stdoutChunk', chunk.toString('utf8'))
@@ -117,3 +131,17 @@ async function shellCommands(public_dns) {
 
 }
 
+
+async function terminateInstance(params) {
+  return new Promise((resolve, reject) => {
+    ec2.terminateInstances(params, function(err, data) {
+      if (err){
+        console.log(err, err.stack);
+        reject(err);
+      } else {
+        console.log(data);
+        resolve('done');
+      }
+    });
+  });
+}

@@ -50,7 +50,7 @@ except FileExistsError:
 try:
     shutil.rmtree("export")
     print("Export Directory " , export_folder ,  " Removed")
-except FileExistsError:
+except FileNotFoundError:
     print("Export Directory " , export_folder ,  " doesn't exist")
 
 os.mkdir(export_folder)

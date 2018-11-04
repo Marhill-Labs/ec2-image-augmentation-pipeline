@@ -7,8 +7,12 @@ import sys
 import boto3
 import os
 import shutil
+import json
 
-s3 = boto3.resource('s3')
+with open('config.json') as f:
+    credentials = json.load(f)
+
+s3 = boto3.resource('s3', aws_access_key_id=credentials["accessKeyId"], aws_secret_access_key=credentials["secretAccessKey"])
 
 default_samples = 10 # Any number
 default_card_set = "3ed"

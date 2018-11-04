@@ -150,3 +150,5 @@ if upload == True:
         file_short = "_".join(slice)
         print(str((counter/samples)*100.0) + "%", "  uploading ", file_short)
         s3.meta.client.upload_file(export_folder + "/" + filename, "mtg-train-" + card_set, file_short)
+
+sys.exit(0)
